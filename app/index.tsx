@@ -7,23 +7,23 @@ import { TodoType } from "@/types/todo";
 import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
 import { ThemeContext, ThemeContextProps } from "@/context/ThemeContext";
 import { ThemeType } from "@/constants/Colors";
-import { Octicons } from "@expo/vector-icons";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
+import { useRouter } from "expo-router";
+import ThemeToggleButton from "@/components/ThemeToggleButton";
 
 export default function Home() {
-
   //? Context
   const { theme, colorScheme, setColorScheme } = useContext(
     ThemeContext
   ) as ThemeContextProps;
-  
+
   //? States
+  const router = useRouter();
   const [todos, setTodos] = useState<TodoType[]>([]);
   const [text, setText] = useState("");
   const [loaded, error] = useFonts({ Inter_500Medium });
-
   //! Async Storage Get All Stored Data
   useEffect(() => {
     const fetchData = async () => {
@@ -87,6 +87,11 @@ export default function Home() {
     setTodos(currenTodos);
   };
 
+  //? Move to Edit Page
+  const handlePress = (id: number) => {
+    router.push(`/todos/${id}`);
+  };
+
   //! Styles
   const styles = createStyles(theme, colorScheme);
 
@@ -96,17 +101,28 @@ export default function Home() {
       <Text
         style={[styles.todoItemText, item.completed && styles.completedText]}
         onPress={() => updateTodo(item.id)}
+        numberOfLines={2}
       >
         {item.title}
       </Text>
-      <Pressable onPress={() => deleteTodo(item.id)}>
-        <MaterialCommunityIcons
-          name="delete-circle"
-          size={36}
-          color="red"
-          selectable={undefined}
-        />
-      </Pressable>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <Pressable onPress={() => handlePress(item.id)}>
+          <MaterialCommunityIcons
+            name="calendar-edit"
+            size={30}
+            color="orange"
+            selectable={undefined}
+          />
+        </Pressable>
+        <Pressable onPress={() => deleteTodo(item.id)}>
+          <MaterialCommunityIcons
+            name="delete-circle"
+            size={36}
+            color="red"
+            selectable={undefined}
+          />
+        </Pressable>
+      </View>
     </View>
   );
   return (
@@ -119,28 +135,15 @@ export default function Home() {
           placeholderTextColor="gray"
           value={text}
           onChangeText={setText}
-          />
-          {/* Add Button */}
+          maxLength={30}
+        />
+        {/* Add Button */}
         <Pressable onPress={addTodo} style={styles.addButton}>
           <Text style={styles.addButtonText}>Add</Text>
         </Pressable>
         {/*  Theme Toggle Button */}
-        <Pressable
-          onPress={() =>
-            setColorScheme(
-              colorScheme === ThemeType.dark ? ThemeType.light : ThemeType.dark
-            )
-          }
-          style={{ marginLeft: 10 }}
-        >
-          {colorScheme === ThemeType.dark ? (
-            <Octicons name="moon" size={32} color={theme.text} />
-          ) : (
-            <Octicons name="sun" size={32} color={theme.text} />
-          )}
-        </Pressable>
+        <ThemeToggleButton />
       </View>
-
       {/* Todo List  */}
       <Animated.FlatList
         data={todos}
