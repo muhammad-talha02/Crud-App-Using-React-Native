@@ -1,33 +1,46 @@
 import { data } from "@/utils/db/todos";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   FlatList,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { TodoType } from "@/types/todo";
+import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
+import { ThemeContext, ThemeContextProps } from "@/context/ThemeContext";
+import { ThemeType } from "@/constants/Colors";
+import { Octicons } from "@expo/vector-icons";
+
 export default function Home() {
+  // Theme Context
+  const { theme, colorScheme, setColorScheme } = useContext(
+    ThemeContext
+  ) as ThemeContextProps;
   const [todos, setTodos] = useState(data.sort((a, b) => b.id - a.id));
   const [text, setText] = useState("");
+  const [loaded, error] = useFonts({ Inter_500Medium });
+
+  if (!loaded && !error) {
+    return null;
+  }
 
   //? Add Todo
   const addTodo = () => {
     if (text.trim()) {
       const newId = todos.length > 0 ? todos[0].id + 1 : 1;
-      let currentTodos = [...todos]
-      currentTodos.unshift({ id: newId, title: text, completed: false })
+      let currentTodos = [...todos];
+      currentTodos.unshift({ id: newId, title: text, completed: false });
       setTodos(currentTodos);
       setText("");
     }
   };
 
   //? Update Todo
-
   const updateTodo = (id: number) => {
     let currenTodos = [...todos];
     currenTodos = currenTodos.map((x) =>
@@ -35,6 +48,7 @@ export default function Home() {
     );
     setTodos(currenTodos);
   };
+
   //? Delete Todo
   const deleteTodo = (id: number) => {
     let currenTodos = [...todos];
@@ -42,7 +56,11 @@ export default function Home() {
     setTodos(currenTodos);
   };
 
-  const renderItem = ({ item }:{item:TodoType}) => (
+  //! Styles
+  const styles = createStyles(theme, colorScheme)
+
+  //! Render Item
+  const renderItem = ({ item }: { item: TodoType }) => (
     <View style={styles.todoItem}>
       <Text
         style={[styles.todoItemText, item.completed && styles.completedText]}
@@ -50,9 +68,7 @@ export default function Home() {
       >
         {item.title}
       </Text>
-      <Pressable
-        onPress={() => deleteTodo(item.id)}
-      >
+      <Pressable onPress={() => deleteTodo(item.id)}>
         <MaterialCommunityIcons
           name="delete-circle"
           size={36}
@@ -75,22 +91,39 @@ export default function Home() {
         <Pressable onPress={addTodo} style={styles.addButton}>
           <Text style={styles.addButtonText}>Add</Text>
         </Pressable>
+        {/* //? Theme Toggle Button */}
+        <Pressable
+          onPress={() =>
+            setColorScheme(
+              colorScheme === ThemeType.dark ? ThemeType.light : ThemeType.dark
+            )
+          }
+          style={{ marginLeft: 10 }}
+        >
+          {colorScheme === ThemeType.dark ? (
+            <Octicons name="moon" size={32} color={theme.text} />
+          ) : (
+            <Octicons name="sun" size={32} color={theme.text} />
+          )}
+        </Pressable>
       </View>
       <FlatList
         data={todos}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{ flexGrow: 1 }}
+        ListEmptyComponent={<View style={[styles.todoItemText,{marginHorizontal:"auto"}]}>Not found!</View>}
       />
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme:any, colorScheme:ThemeType) =>{
+return StyleSheet.create({
   container: {
     flex: 1,
     width: "100%",
-    backgroundColor: "black",
+    backgroundColor: theme.background,
   },
   inputContainer: {
     flexDirection: "row",
@@ -110,17 +143,18 @@ const styles = StyleSheet.create({
     padding: 10,
     marginRight: 10,
     fontSize: 18,
+    fontFamily: "Inter_500Medium",
     minWidth: 0,
-    color: "white",
+    color: theme.text,
   },
   addButton: {
-    backgroundColor: "white",
+    backgroundColor: theme.button,
     borderRadius: 5,
     padding: 10,
   },
   addButtonText: {
     fontSize: 18,
-    color: "black",
+    color: colorScheme === 'dark' ? 'black': 'white',
   },
   todoItem: {
     flexDirection: "row",
@@ -135,13 +169,16 @@ const styles = StyleSheet.create({
     marginHorizontal: "auto",
     pointerEvents: "auto",
   },
-  todoItemText:{
-    flex:1,
-    fontSize:18,
-    color:'white'
+  todoItemText: {
+    fontFamily: "Inter_500Medium",
+    flex: 1,
+    fontSize: 18,
+    color: theme.text,
   },
-  completedText:{
-    textDecorationLine:'line-through',
-    color:'gray'
-  }
+  completedText: {
+    textDecorationLine: "line-through",
+    color: "gray",
+  },
 });
+}
+
