@@ -158,7 +158,7 @@ export default function Home() {
         itemLayoutAnimation={LinearTransition}
         keyboardDismissMode="on-drag"
       />
-      //! Status Bar Top of Device i.e time, % signal
+      {/* //! Status Bar Top of Device i.e time, % signal */}
       <StatusBar
         style={
           colorScheme === ThemeType.dark ? ThemeType.light : ThemeType.dark
